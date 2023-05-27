@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    image: booking_service
+    working_dir: /server
+    ports:
+      - 8003:8003
+    restart: on-failure
+    volumes:
+      - ../booking_service:/server
+    command: uvicorn main:app --host 0.0.0.0 --port 8003
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+
+  comsumer:
+    image: booking_service
+    working_dir: /consumer
+    restart: on-failure
+    volumes:
+      - ../kafka_event_driven:/consumer
+    command: python consumer_ticket_register.py
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - api

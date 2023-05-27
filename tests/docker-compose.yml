@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  test_services:
+    image: booking_service
+    working_dir: /test_services
+    restart: on-failure
+    volumes:
+      - ../tests:/test_services
+    command: pytest test_ticket_booking.py
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

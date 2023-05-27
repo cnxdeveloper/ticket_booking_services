@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  mongodb_container:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: admin@root
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongodb_data:/data
+    restart: on-failure
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29093:29093"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "register_ticket:1:1,tickets_in_stock:1:1"
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://kafka:29093
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: OUTSIDE
+    depends_on:
+      - zookeeper
+
+  api:
+    build: .
+    image: booking_service
+    working_dir: /server
+    ports:
+      - 8003:8003
+    restart: on-failure
+    volumes:
+      - ./booking_service:/server
+    command: uvicorn main:app --host 0.0.0.0 --port 8003
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - kafka
+
+  comsumer:
+    image: booking_service
+    working_dir: /consumer
+    restart: on-failure
+    volumes:
+      - ./kafka_event_driven:/consumer
+    command: python consumer_ticket_register.py
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - kafka
+      - api

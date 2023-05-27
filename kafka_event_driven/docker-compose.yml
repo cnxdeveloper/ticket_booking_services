@@ -1,0 +1,25 @@
+version: '3'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29093:29093"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "register_ticket:1:1,tickets_in_stock:1:1"
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://:29093
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: OUTSIDE
+    depends_on:
+      - zookeeper
