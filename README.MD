@@ -18,7 +18,7 @@
 ```
 sudo docker-compose up
 ```
-2. Make sure we scucess built by docker-compose check with command:
+2. Make sure we success built by docker-compose check with command:
 ```
 sudo docker ps
 ```
