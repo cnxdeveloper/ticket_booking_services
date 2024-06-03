@@ -3,12 +3,36 @@ import urllib
 from logging_utils import LoggerBase
   
 class MongoDBClient(LoggerBase):
+    """
+    A class representing a MongoDB client.
+    """
+
     def __init__(self, hostname, port, user, pwd, name="MongoDBClient", root='./logs/'):
+        """
+        Initialize a MongoDBClient object.
+
+        Args:
+            hostname (str): The hostname of the MongoDB server.
+            port (int): The port number of the MongoDB server.
+            user (str): The username for authentication.
+            pwd (str): The password for authentication.
+            name (str, optional): The name of the MongoDBClient. Defaults to "MongoDBClient".
+            root (str, optional): The root directory for logging. Defaults to './logs/'.
+        """
+        # Call the constructor of the parent class
         super().__init__(name, root)
+
+        # URL encode the username and password
         self.username = urllib.parse.quote_plus(user)
         self.password = urllib.parse.quote_plus(pwd)
+
+        # Construct the MongoDB connection string
         self.host = 'mongodb://%s:%s@%s:%s/' % (self.username, self.password, hostname, port)
+
+        # Log the connection string
         self.logger.info("Connecting to {} !!!".format(self.host))
+
+        # Create a MongoDB client
         self.client = pymongo.MongoClient(self.host, w=1)
         
     def db_is_exist(self, db_name:str):
